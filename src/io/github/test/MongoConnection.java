@@ -14,13 +14,12 @@ public class MongoConnection {
 	public static void main(String[] args) throws FileNotFoundException, UnsupportedEncodingException{		
 		BaseConnection bc = new BaseConnection();
 		bc.connect();
-		bc.showDBs();
 		
 		ArrayList<String> pos_words = new ArrayList<String>();
 		ArrayList<String> neg_words = new ArrayList<String>();
 		
-		fillWords("negative-words.txt", pos_words);
-		fillWords("positive-words.txt", neg_words);
+		fillWords("negative-words.txt", neg_words);
+		fillWords("positive-words.txt", pos_words);
 		
 		//Cursors for the 2 different json files
 		bc.setDBAndCollection("cs336", "unlabel_review_after_splitting");
@@ -30,6 +29,8 @@ public class MongoConnection {
 		
 		//Reviews arraylist
 		ArrayList<Review> reviews = new ArrayList<Review>();
+		
+		//int positives = 0, negatives = 0;
 		
 		//Iterate through each entry in split list
 		while(split.hasNext()){
@@ -52,15 +53,19 @@ public class MongoConnection {
 					sentiment_score -= count;
 				}
 			}
-			if (sentiment_score > 0) {
+			if (sentiment_score >= 0) {
 				review.setSentiment("positive");
+				//positives++;
 			}
 			else {
 				review.setSentiment("negative");
+				//negatives++;
 			}
 			reviews.add(review); //add review to reviews list
 		}
 		writeFile(reviews); //write to json file
+		//System.out.println("Number of positive reviews: " + positives);
+		//System.out.println("Number of negative reviews: " + negatives);
 		bc.close();
 	}
 	
