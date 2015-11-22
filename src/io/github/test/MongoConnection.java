@@ -30,14 +30,14 @@ public class MongoConnection {
 		//Reviews arraylist
 		ArrayList<Review> reviews = new ArrayList<Review>();
 		
-		//int positives = 0, negatives = 0;
+		int positives = 0, negatives = 0;
 		
 		//Iterate through each entry in split list
 		while(split.hasNext()){
+			int sentiment_score = 0;
 			DBObject split_dbo = split.next();
 			DBObject no_split_dbo = no_split.next();
 			Review review = new Review((String) no_split_dbo.get("id"), (String) no_split_dbo.get("review"));
-			int sentiment_score = 0;
 			BasicDBList word_count_list = (BasicDBList) split_dbo.get("review");			
 			
 			//Sentiments algorithm
@@ -46,26 +46,26 @@ public class MongoConnection {
 				int count = (int) instance.get("count");
 				String word = (String) instance.get("word");
 				
-				if(pos_words.contains(word)){
-					sentiment_score += count;
-				}
-				else if(neg_words.contains(word)){
+				if(neg_words.contains(word)){
 					sentiment_score -= count;
 				}
+				else if(pos_words.contains(word)){
+					sentiment_score += count;
+				}
 			}
-			if (sentiment_score >= 0) {
-				review.setSentiment("positive");
-				//positives++;
+			if (sentiment_score < 0) {
+				review.setSentiment("negative");
+				negatives++;
 			}
 			else {
-				review.setSentiment("negative");
-				//negatives++;
+				review.setSentiment("positive");
+				positives++;
 			}
 			reviews.add(review); //add review to reviews list
 		}
 		writeFile(reviews); //write to json file
-		//System.out.println("Number of positive reviews: " + positives);
-		//System.out.println("Number of negative reviews: " + negatives);
+		System.out.println("Number of positive reviews: " + positives);
+		System.out.println("Number of negative reviews: " + negatives);
 		bc.close();
 	}
 	
