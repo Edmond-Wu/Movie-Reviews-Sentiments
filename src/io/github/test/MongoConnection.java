@@ -30,7 +30,7 @@ public class MongoConnection {
 		//Reviews arraylist
 		ArrayList<Review> reviews = new ArrayList<Review>();
 		
-		int positives = 0, negatives = 0;
+		//int positives = 0, negatives = 0;
 		
 		//Iterate through each entry in split list
 		while(split.hasNext()){
@@ -55,17 +55,17 @@ public class MongoConnection {
 			}
 			if (sentiment_score < 0) {
 				review.setSentiment("negative");
-				negatives++;
+				//negatives++;
 			}
 			else {
 				review.setSentiment("positive");
-				positives++;
+				//positives++;
 			}
 			reviews.add(review); //add review to reviews list
 		}
 		writeFile(reviews); //write to json file
-		System.out.println("Number of positive reviews: " + positives);
-		System.out.println("Number of negative reviews: " + negatives);
+		//System.out.println("Number of positive reviews: " + positives);
+		//System.out.println("Number of negative reviews: " + negatives);
 		bc.close();
 	}
 	
