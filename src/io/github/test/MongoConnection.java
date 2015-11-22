@@ -8,17 +8,19 @@ import io.github.sqlconnection.BaseConnection;
 
 public class MongoConnection {
 	
+	/**
+	 * Main method containing review analysis algorithm
+	 */
 	public static void main(String[] args) throws FileNotFoundException, UnsupportedEncodingException{		
 		BaseConnection bc = new BaseConnection();
 		bc.connect();
 		bc.showDBs();
 		
-		//Type of value doesn't matter; only key does
-		HashMap<String, String> positives = new HashMap<String, String>();
-		HashMap<String, String> negatives = new HashMap<String, String>();
+		ArrayList<String> pos_words = new ArrayList<String>();
+		ArrayList<String> neg_words = new ArrayList<String>();
 		
-		fillHashmap("negative-words.txt", negatives);
-		fillHashmap("positive-words.txt", positives);
+		fillWords("negative-words.txt", pos_words);
+		fillWords("positive-words.txt", neg_words);
 		
 		//Cursors for the 2 different json files
 		bc.setDBAndCollection("cs336", "unlabel_review_after_splitting");
@@ -26,8 +28,8 @@ public class MongoConnection {
 		bc.setDBAndCollection("cs336", "unlabel_review");
 		DBCursor no_split = bc.showRecords();		
 		
-		//Reviews hashmap
-		HashMap<Review, String> reviews = new HashMap<Review, String>();
+		//Reviews arraylist
+		ArrayList<Review> reviews = new ArrayList<Review>();
 		
 		//Iterate through each entry in split list
 		while(split.hasNext()){
@@ -35,7 +37,7 @@ public class MongoConnection {
 			DBObject no_split_dbo = no_split.next();
 			Review review = new Review((String) no_split_dbo.get("id"), (String) no_split_dbo.get("review"));
 			int sentiment_score = 0;
-			BasicDBList word_count_list = (BasicDBList) split_dbo.get("review");
+			BasicDBList word_count_list = (BasicDBList) split_dbo.get("review");			
 			
 			//Sentiments algorithm
 			for(Object o : word_count_list){
@@ -43,10 +45,10 @@ public class MongoConnection {
 				int count = (int) instance.get("count");
 				String word = (String) instance.get("word");
 				
-				if(positives.containsKey(word)){
+				if(pos_words.contains(word)){
 					sentiment_score += count;
 				}
-				else if(negatives.containsKey(word)){
+				else if(neg_words.contains(word)){
 					sentiment_score -= count;
 				}
 			}
@@ -56,17 +58,16 @@ public class MongoConnection {
 			else {
 				review.setSentiment("negative");
 			}
-			reviews.put(review, review.getSentiment());
+			reviews.add(review); //add review to reviews list
 		}
-		
-		writeFile(reviews);
+		writeFile(reviews); //write to json file
 		bc.close();
 	}
 	
 	/**
-	 * Method to fill the positives/negatives hashmap
+	 * Method to fill the positives/negatives arraylist
 	 */
-	public static void fillHashmap(String file_name, HashMap<String, String> map) {
+	public static void fillWords(String file_name, ArrayList<String> words) {
 		File file = new File(file_name);
 		try{
 			@SuppressWarnings("resource")
@@ -74,7 +75,7 @@ public class MongoConnection {
 			String word;
 			while (scan.hasNextLine()) {
 				word = scan.next();
-				map.put(word, word);
+				words.add(word);
 			}
 		}
 		catch(FileNotFoundException e){
@@ -85,11 +86,11 @@ public class MongoConnection {
 	/**
 	 * Method to create the json file containing categorized reviews
 	 */
-	public static void writeFile(HashMap<Review, String> map) throws FileNotFoundException, UnsupportedEncodingException {
+	public static void writeFile(ArrayList<Review> reviews) throws FileNotFoundException, UnsupportedEncodingException {
 		Writer writer = null;
 		try {
 		    writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream("reviews.json"), "utf-8"));
-		    for(Review review : map.keySet()){
+		    for(Review review : reviews){
 				writer.write(review.toString() + "\n");
 			}
 		}
